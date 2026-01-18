@@ -1,24 +1,19 @@
 package gr.hua.dit.studyrooms.config;
 
 
-import gr.hua.dit.studyrooms.core.security.JwtAuthenticationFilter;
 
+import gr.hua.dit.studyrooms.core.security.JwtAuthenticationFilter;
 import gr.hua.dit.studyrooms.web.rest.error.RestApiAccessDeniedHandler;
 import gr.hua.dit.studyrooms.web.rest.error.RestApiAuthenticationEntryPoint;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -27,7 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     /**
-     * API chain (/api/v1/**): STATELESS + JWT
+     * API chain (/api/**): STATELESS + JWT
      */
     @Bean
     @Order(1)
@@ -70,7 +65,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/rooms", "/register", "/login", "/css/**", "/js/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/my-bookings", "/rooms/*/book").authenticated()
+
+                        // ✅ Staff-only area
+                        .requestMatchers("/staff/**").hasRole("STAFF")
+
+                        // ✅ Booking endpoints: logged-in (θα κόψουμε STAFF μέσα στον controller)
+                        .requestMatchers("/my-bookings", "/rooms/*/book", "/bookings/*/cancel").authenticated()
+
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
